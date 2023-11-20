@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "fastapi-apikey"
+name = "auth-proof-of-concept"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Daniel Restrepo <danielrestrepo9725@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
