@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     # Bearer
     BEARER_TOKEN: str
 
+    # Database
+    DATABASE_URL: str
+
     model_config = SettingsConfigDict(env_file='.env')
 
 
