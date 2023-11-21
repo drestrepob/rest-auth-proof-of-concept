@@ -4,7 +4,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # API-KEY
     API_KEY: str
-    API_KEY_NAME: str = 'access_token'
+    API_KEY_NAME: str
+
+    # Basic
+    BASIC_USERNAME: str
+    BASIC_PASSWORD: str
 
     model_config = SettingsConfigDict(env_file='.env')
 
