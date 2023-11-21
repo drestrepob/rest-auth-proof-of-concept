@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     BASIC_USERNAME: str
     BASIC_PASSWORD: str
 
+    # Bearer
+    BEARER_TOKEN: str
+
     model_config = SettingsConfigDict(env_file='.env')
 
 

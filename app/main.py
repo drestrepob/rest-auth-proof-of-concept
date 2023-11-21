@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 
-from app.routers import api_key_router, basic_router
+from app.routers import api_key_router, basic_router, bearer_router
 
 app = FastAPI(
     title='auth API',
@@ -17,3 +17,4 @@ async def index():
 # Routers
 app.include_router(api_key_router)
 app.include_router(basic_router)
+app.include_router(bearer_router)
