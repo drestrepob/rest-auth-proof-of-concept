@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 
-@router.get('/')
+@router.get('/greet')
 async def poc_api_key():
     return {
         'message': 'You are using an API KEY to access this API!'
