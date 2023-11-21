@@ -15,7 +15,7 @@ class TestBasicAuthentication:
         path = f'{self.router_prefix}/greet'
         response = client.get(path, auth=(settings.BASIC_USERNAME, settings.BASIC_PASSWORD))
         assert response.status_code == HTTP_200_OK
-        assert response.json() == {'message': 'You are using an Basic (user & password) to access this API!'}
+        assert response.json() == {'message': 'You are using a Basic (user & password) to access this API!'}
 
     def test_protected_route_with_invalid_credentials(self):
         path = f'{self.router_prefix}/greet'
