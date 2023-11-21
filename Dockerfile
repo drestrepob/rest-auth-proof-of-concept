@@ -83,5 +83,7 @@ RUN --mount=type=cache,target=/root/.cache \
 WORKDIR /src
 # Copy the project files
 COPY --chown=${USER} app app
+COPY --chown=${USER} migrations migrations
 COPY --chown=${USER} scripts scripts
 COPY --chown=${USER} tests tests
+COPY --chown=${USER} alembic.ini alembic.ini

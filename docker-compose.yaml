@@ -16,7 +16,11 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/src/app
+      - ./migrations:/src/migrations
       - ./scripts:/src/scripts
+      - ./tests:/src/tests
+      - ./alembic.ini:/src/alembic.ini
+      
 
   db:
     container_name: local-database

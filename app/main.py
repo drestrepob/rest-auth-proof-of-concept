@@ -9,7 +9,7 @@ app = FastAPI(
 )
 
 @app.get('/')
-async def index():
+async def home():
     return {
         'message': 'Welcome to my server!'
     }
