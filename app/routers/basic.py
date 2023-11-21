@@ -14,5 +14,5 @@ router = APIRouter(
 @router.get('/greet')
 async def poc_basic():
     return {
-        'message': 'You are using an Basic (user & password) to access this API!'
+        'message': 'You are using a Basic (user & password) to access this API!'
     }
