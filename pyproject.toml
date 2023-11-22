@@ -16,6 +16,7 @@ pydantic = "^2.0.1"
 pydantic-settings = "^2.0.0"
 pytest = "^7.0.0"
 python-jose = {version = "^3.3.0", extras = ["cryptography"]}
+python-multipart = "^0.0.6"
 sqlalchemy = "^2.0.20"
 
 [tool.poetry.dev-dependencies]
