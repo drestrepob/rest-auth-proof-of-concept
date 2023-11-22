@@ -8,6 +8,7 @@ from typing import Annotated
 from app.auth.jwt import authenticate_user, create_access_token
 from app.config import settings
 from app.database import get_db
+from app.schemas import TokenSchema
 
 
 router = APIRouter(
@@ -21,7 +22,7 @@ router = APIRouter(
 async def login_for_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db),
-):
+) :
     authenticated_user = authenticate_user(db, form_data.username, form_data.password)
     if not authenticated_user:
         raise HTTPException(
@@ -37,8 +38,8 @@ async def login_for_token(
         },
         expires_delta=expires_at
     )
-    return {
-        'access_token': access_token,
-        'token_type': 'bearer',
-        'expires_at': expires_at,
-    }
+    return TokenSchema(
+        access_token=access_token,
+        token_type='bearer',
+        expires_at=expires_at.total_seconds(),
+    )
