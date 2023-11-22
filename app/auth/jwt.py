@@ -63,3 +63,29 @@ async def get_current_user(db: Session = Depends(get_db), token: str = Depends(o
         raise credentials_exception
     
     return UserSchema.model_validate(user)
+
+
+async def refresh_token(token: str = Depends(oauth2_scheme)):
+    expires_at = timedelta(minutes=settings.JWT_TOKEN_EXPIRATION)
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+    except JWTError as e:
+        logger.exception("Error refreshing token!")
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token = create_access_token(
+        data={
+            "sub": payload.get("sub"),
+            "is_active": payload.get("is_active", True)
+        },
+        expires_delta=expires_at
+    )
+    return access_token
