@@ -30,29 +30,29 @@ client = TestClient(app)
 class TestBasicAuthentication:
     jwt_router_prefix = '/jwt'
     user_router_prefix = '/users'
-    username = fake.user_name()
-    password = fake.word()
 
     def _create_user(self, username: str, password: str):
         path = f'{self.user_router_prefix}/'
         response = client.post(
             path,
             json={
-                'username': self.username,
-                'password': self.password,
+                'username': username,
+                'password': password,
             }
         )
         assert response.status_code == HTTP_200_OK
         return response.json()
 
     def test_protected_route_with_valid_jwt(self):
-        self._create_user(self.username, self.password)
+        test_username = fake.user_name()
+        test_password = fake.word()
+        self._create_user(test_username, test_password)
         path = f'{self.jwt_router_prefix}/token'
         response = client.post(
             path,
             data={
-                'username': self.username,
-                'password': self.password,
+                'username': test_username,
+                'password': test_password,
             }
         )
         assert response.status_code == HTTP_200_OK
