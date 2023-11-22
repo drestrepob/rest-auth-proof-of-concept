@@ -34,7 +34,8 @@ async def login_for_token(
         data={
             'sub': authenticated_user.username,
             'is_active': authenticated_user.is_active,
-        }
+        },
+        expires_delta=expires_at
     )
     return {
         'access_token': access_token,

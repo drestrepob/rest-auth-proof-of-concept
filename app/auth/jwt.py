@@ -1,3 +1,5 @@
+import logging
+
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from fastapi import Depends, HTTPException
@@ -10,6 +12,7 @@ from app.database import get_db
 from app.models import User
 from app.schemas import UserSchema
 
+logger = logging.getLogger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
@@ -29,7 +32,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.utcnow() + timedelta(minutes=2)
     
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
@@ -37,7 +40,6 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 async def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
-    print(f'Token: {token}')
     credentials_exception = HTTPException(
         status_code=HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -52,11 +54,11 @@ async def get_current_user(db: Session = Depends(get_db), token: str = Depends(o
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-    except JWTError:
+    except JWTError as e:
+        logger.exception("Error decoding token!")
         raise credentials_exception
     
     user = User.get(db, username)
-    # print(f'SELECTED USER: {user}')
     if user is None:
         raise credentials_exception
     
