@@ -20,6 +20,7 @@ python-multipart = "^0.0.6"
 sqlalchemy = "^2.0.20"
 
 [tool.poetry.dev-dependencies]
+Faker = "^20.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
