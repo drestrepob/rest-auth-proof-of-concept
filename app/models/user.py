@@ -23,6 +23,8 @@ class User(Base):
     
     @classmethod
     def create(cls, db, **kwargs) -> Self:
+        hashed_password = cls.get_password_hash(kwargs.pop('password'))
+        kwargs['hashed_password'] = hashed_password
         user = cls(**kwargs)
         db.add(user)
         db.commit()

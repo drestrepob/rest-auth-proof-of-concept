@@ -10,4 +10,4 @@ class UserSchema(BaseModel):
 
 
 class DBUserSchema(UserSchema):
-    hashed_password: str = Field(alias='password')
+    password: str
