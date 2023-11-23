@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     JWT_TOKEN_EXPIRATION: int
     JWT_SECRET_KEY: str
 
+    # Auth0
+    AUTH0_CLIENT_ID: str
+    AUTH0_CLIENT_SECRET: str
+    AUTH0_DOMAIN: str
+    AUTH0_ISSUER: str
+    AUTH0_AUDIENCE: str
+
     model_config = SettingsConfigDict(env_file='.env')
 
 
