@@ -1,5 +1,5 @@
 from fastapi import Security, HTTPException
-from fastapi.security.api_key import APIKeyQuery, APIKeyCookie, APIKeyHeader, APIKey
+from fastapi.security.api_key import APIKeyQuery, APIKeyHeader
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.config import settings
