@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     TEST_DATABASE_URL: str
 
+    # Digest
+    DIGEST_USERNAME: str
+    DIGEST_PASSWORD: str
+    DIGEST_NONCE: str
+    DIGEST_REALM: str
+
     # JWT
     JWT_ALGORITHM: str
     JWT_TOKEN_EXPIRATION: int
