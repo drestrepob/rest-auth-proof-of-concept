@@ -63,10 +63,9 @@ class TestBasicAuthentication:
         )
         assert response.status_code == HTTP_200_OK
 
-    def test_protected_route_with_invalid_jwt(self):
-        access_token = fake.word()
+    def test_protected_route_with_invalid_jwt(self, invalid_jwt):
         response = client.get(
             '/me',
-            headers={'Authorization': f'Bearer {access_token}invalid'}
+            headers={'Authorization': f'Bearer {invalid_jwt}'}
         )
         assert response.status_code == HTTP_401_UNAUTHORIZED
