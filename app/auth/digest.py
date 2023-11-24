@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 security = HTTPDigest()
 
 
-def _get_expected_response(username: str, password: str, realm: str, nonce: str, uri: str, method="GET") -> str:
+def calculate_digest_response(username: str, password: str, realm: str, nonce: str, uri: str, method="GET") -> str:
     ha1 = hashlib.md5(f"{username}:{realm}:{password}".encode()).hexdigest()
     ha2 = hashlib.md5(f"{method}:{uri}".encode()).hexdigest()
     response = hashlib.md5(f"{ha1}:{nonce}:{ha2}".encode()).hexdigest()
@@ -25,7 +25,7 @@ def validate_credentials(credentials: Annotated[HTTPAuthorizationCredentials, Se
     parsed_credentials = HTTPDigestCredentials.from_string_credentials(credentials.credentials)
     username = settings.DIGEST_USERNAME
     password = settings.DIGEST_PASSWORD
-    expected_response = _get_expected_response(
+    expected_response = calculate_digest_response(
         username=username,
         password=password,
         realm=parsed_credentials.realm,
