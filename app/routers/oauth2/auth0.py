@@ -1,28 +1,24 @@
-from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends
 from starlette.status import HTTP_401_UNAUTHORIZED
-from typing import Annotated
 
-from app.auth.oauth2 import retrieve_token, validate_token
-from app.config import settings
+from app.auth.oauth2.auth0 import retrieve_token, validate_token
 
 
 router = APIRouter(
-    prefix='/oauth2',
+    prefix='/auth0',
     tags=['OAuth2'],
     responses={404: {'description': 'Not found'}},
 )
 
 
-@router.get('/auth0/items')
+@router.get('/items')
 async def get_items(valid_token: bool = Depends(validate_token)):
     return {
         'message': 'Hello World!'
     }
 
 
-@router.post('/auth0/token')
+@router.post('/token')
 async def login_for_token():
     # Implement user validation
     token = retrieve_token(scope="items")

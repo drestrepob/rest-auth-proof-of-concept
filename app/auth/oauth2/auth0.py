@@ -78,6 +78,5 @@ async def validate_token(token: str = Depends(security)):
         else:
             # Logic to validate scope or user data
             return True
-
-    
+  
     return False

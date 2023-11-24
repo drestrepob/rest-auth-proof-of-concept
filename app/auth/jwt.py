@@ -13,7 +13,7 @@ from app.models import User
 from app.schemas import UserSchema
 
 logger = logging.getLogger(__name__)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", scheme_name="JWT")
 
 
 def authenticate_user(db, username: str, password: str):

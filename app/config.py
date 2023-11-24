@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     AUTH0_ISSUER: str
     AUTH0_AUDIENCE: str
 
+    # Okta
+    OKTA_CLIENT_ID: str
+    OKTA_CLIENT_SECRET: str
+    OKTA_ISSUER: str
+    OKTA_AUDIENCE: str
+
     model_config = SettingsConfigDict(env_file='.env')
 
 
