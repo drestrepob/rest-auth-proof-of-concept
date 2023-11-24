@@ -22,7 +22,7 @@ def login(request: Request):
 
 
 @router.get('/username')
-def get_username(valid_token: bool = Depends(online_validator.validate)):
+def get_username(valid_token: bool = Depends(offline_validator.validate)):
     return {
         'message': 'Hello World!'
     }

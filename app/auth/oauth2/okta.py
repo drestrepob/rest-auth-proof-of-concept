@@ -4,6 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from okta_jwt.jwt import validate_token
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.config import settings
@@ -45,15 +46,33 @@ class OktaTokenValidator(ABC):
 
 class OktaTokenValidatorOffline(OktaTokenValidator):
     """
-    Validates Okta tokens offline.
+    Validates Okta tokens offline. This method is slightly less secure because 
+    you can't be sure that the access token hasn't been revoked remotely, but 
+    on the other hand, you don't have to use your Okta client secret to 
+    validate the token locally.
     """
     def validate(self, token: str = Depends(security)):
-        pass
+        try:
+            response = validate_token(
+                token,
+                settings.OKTA_ISSUER,
+                settings.OKTA_AUDIENCE,
+                settings.OKTA_CLIENT_ID
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=HTTP_401_UNAUTHORIZED,
+                detail='Invalid authentication credentials',
+                headers={'WWW-Authenticate': 'Bearer'}
+            )
 
 
 class OktaTokenValidatorOnline(OktaTokenValidator):
     """
-    Validates Okta tokens online.
+    Validates Okta tokens online. The Okta authorization server's /inspect 
+    endpoint to check the token. The advantage of this method is that you will 
+    know if the token has been revoked; the downside is that it's slower than 
+    validating the JWT locally.
     """
     def validate(self, token: str = Depends(security)):
         headers = {
