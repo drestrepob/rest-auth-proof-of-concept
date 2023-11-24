@@ -42,15 +42,23 @@ async def validate_token(token: str = Depends(security)):
     jwks = json_url.json()
     unverified_header = jwt.get_unverified_header(token)
     rsa_key = {}
-    for key in jwks["keys"]:
-        if key["kid"] == unverified_header["kid"]:
-            rsa_key = {
-                "kty": key["kty"],
-                "kid": key["kid"],
-                "use": key["use"],
-                "n": key["n"],
-                "e": key["e"]
-            }
+    try:
+        for key in jwks["keys"]:
+            if key["kid"] == unverified_header["kid"]:
+                rsa_key = {
+                    "kty": key["kty"],
+                    "kid": key["kid"],
+                    "use": key["use"],
+                    "n": key["n"],
+                    "e": key["e"]
+                }
+    except KeyError:
+        logger.exception("Unable to verify token!")
+        raise HTTPException(
+            status_code=401,
+            detail="Unable to verify token!",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
     
     if rsa_key:
         try:

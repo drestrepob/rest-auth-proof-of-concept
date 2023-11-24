@@ -14,7 +14,7 @@ router = APIRouter(
 @router.get('/items')
 async def get_items(valid_token: bool = Depends(validate_token)):
     return {
-        'message': 'Hello World!'
+        'message': 'You are accessing these resources using Auth0!'
     }
 
 
