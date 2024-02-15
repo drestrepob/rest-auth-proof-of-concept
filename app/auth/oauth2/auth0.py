@@ -9,7 +9,7 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 jwks_url = f"https://{settings.AUTH0_DOMAIN}/.well-known/jwks.json"
-security = OAuth2PasswordBearer(tokenUrl=f"https://{settings.AUTH0_DOMAIN}/oauth2/default/v1/token")
+security = OAuth2PasswordBearer(tokenUrl="/auth0/token")
 
 
 def retrieve_token(scope: str):
