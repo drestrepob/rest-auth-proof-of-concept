@@ -1,7 +1,7 @@
 ################################
 # PYTHON-BASE
 ################################
-FROM python:3.11.6-slim-bookworm as python-base
+FROM python:3.11.8-slim-bookworm as python-base
 
 # Sets up all our shared environment variables
 ENV PYTHONUNBUFFERED=1 \
