@@ -24,5 +24,4 @@ async def get_items(valid_token: Annotated[dict, Depends(validate_token)]):
 
 @router.post('/token')
 async def login_for_token(credentials: Annotated[HTTPBasicCredentials, Depends(HTTPBasic())]):
-    token = retrieve_token(client_id=credentials.username, client_secret=credentials.password)
-    return token.get("access_token")
+    return retrieve_token(client_id=credentials.username, client_secret=credentials.password)

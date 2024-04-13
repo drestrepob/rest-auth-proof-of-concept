@@ -115,8 +115,8 @@ async def validate_token(token: Annotated[str, Security(oauth2_scheme)]) -> dict
             token,
             signing_key,
             algorithms=["RS256"],
-            audience=settings.AUTH0_MANAGEMENT_AUDIENCE,
-            issuer=settings.AUTH0_MANAGEMENT_ISSUER,
+            audience=settings.AUTH0_AUDIENCE,
+            issuer=settings.AUTH0_ISSUER,
         )
     except (jwt.ExpiredSignatureError, jwt.PyJWTError):
         logger.exception("Error decoding token!")
