@@ -1,128 +1,129 @@
 import httpx
 import logging
 
-from jose import jwt
-from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from typing import Annotated, Final
+
+import jwt
+
+from fastapi import HTTPException, Security
+from fastapi.security.oauth2 import OAuth2, OAuthFlowsModel
+from fastapi.security.utils import get_authorization_scheme_param
+from starlette import status
+from starlette.requests import Request
 
 from app.config import settings
-from app.schemas.auth0 import ClientRequestBody
 
 logger = logging.getLogger(__name__)
-oauth_url = f"https://{settings.AUTH0_DOMAIN}/oauth/token"
-clients_url = f"https://{settings.AUTH0_DOMAIN}/api/v2/clients"
-default_headers = {
+base_url: Final[str] = f"https://{settings.AUTH0_DOMAIN}"
+jwks_client = jwt.PyJWKClient(f"https://{settings.AUTH0_DOMAIN}/.well-known/jwks.json")
+default_headers: dict[str, str] = {
     "Accept": "application/json",
     "Content-Type": "application/x-www-form-urlencoded",
     "Cache-Control": "no-cache"
 }
-jwks_url = f"https://{settings.AUTH0_DOMAIN}/.well-known/jwks.json"
-security = OAuth2PasswordBearer(tokenUrl="/auth0/token")
+jwks_url: Final[str] = f"https://{settings.AUTH0_DOMAIN}/.well-known/jwks.json"
 
 
-async def create_client():
-    payload = ClientRequestBody(name="POC-client", app_type="native").model_dump()
-    logger.error(f"Payload: {payload}")
-    headers = {
-        **default_headers,
-        "Authorization": f"Bearer {settings.AUTH0_MANAGEMENT_TOKEN}"
-    }
-    response = httpx.post(url=clients_url, headers=headers, data=payload)
-    if response.status_code == 201:
-        return response.json()
-    else:
-        raise HTTPException(
-            status_code=response.status_code,
-            detail=response.json()
-        )
+class OAuth2ClientCredentials(OAuth2):
+    """
+    Implement OAuth2 client_credentials workflow.
+
+    This is modeled after the OAuth2PasswordBearer and OAuth2AuthorizationCodeBearer
+    classes from FastAPI, but sets auto_error to True to avoid uncovered branches.
+    See https://github.com/tiangolo/fastapi/issues/774 for original implementation,
+    and to check if FastAPI added a similar class.
+
+    See RFC 6749 for details of the client credentials authorization grant.
+    """
+    def __init__(self, token_url: str, scheme_name: str | None = None, scopes: dict[str, str] | None = None):
+        if not scopes:
+            scopes = {}
+        flows = OAuthFlowsModel(clientCredentials={"tokenUrl": token_url, "scopes": scopes})
+        super().__init__(flows=flows, scheme_name=scheme_name, auto_error=True)
+
+    async def __call__(self, request: Request) -> str | None:
+        authorization: str | None = request.headers.get("Authorization")
+        scheme, param = get_authorization_scheme_param(authorization)
+        if not authorization or scheme.lower() != "bearer":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unauthorized",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        return param
 
 
-async def get_clients():
-    headers = {
-        **default_headers,
-        "Authorization": f"Bearer {settings.AUTH0_MANAGEMENT_TOKEN}"
-    }
-    response = httpx.get(url=clients_url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise HTTPException(
-            status_code=response.status_code,
-            detail=response.json()
-        )
+oauth2_scheme = OAuth2ClientCredentials(token_url="/auth0/token")
 
 
-def retrieve_token():
-    data = {
+def retrieve_token(client_id: str, client_secret: str) -> dict:
+    """Generates an access token for the client.
+
+    Args:
+        client_id: The client ID.
+        client_secret: The client secret.
+
+    Returns:
+        The access token and its metadata.
+
+    Raises:
+        AuthenticationError: If the credentials are invalid.
+    """
+    payload: dict[str, str] = {
         "grant_type": "client_credentials",
-        "client_id": settings.AUTH0_CLIENT_ID,
-        "client_secret": settings.AUTH0_CLIENT_SECRET,
+        "client_id": client_id,
+        "client_secret": client_secret,
         "audience": settings.AUTH0_AUDIENCE,
     }
-    response = httpx.post(url=oauth_url, headers=default_headers, data=data)
-    if response.status_code == 200:
+    response = httpx.post(url=f"{base_url}/oauth/token", headers=default_headers, data=payload)
+    if response.status_code != status.HTTP_200_OK:
         logger.error(f"AUTH0 response: {response.json()}")
-        return response.json()
-    else:
         raise HTTPException(
             status_code=response.status_code,
             detail=response.json(),
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
+    return response.json()
 
-async def validate_token(token: str = Depends(security)) -> dict:
-    json_url = httpx.get(jwks_url)
-    jwks = json_url.json()
-    unverified_header = jwt.get_unverified_header(token)
-    rsa_key = {}
+
+async def validate_token(token: Annotated[str, Security(oauth2_scheme)]) -> dict:
+    """Validates the token and returns the payload if valid.
+
+    Args:
+        token: The token to validate.
+
+    Returns:
+        The decoded payload of the token.
+
+    Raises:
+        AuthenticationError: If the token is invalid.
+    """
     try:
-        for key in jwks["keys"]:
-            if key["kid"] == unverified_header["kid"]:
-                rsa_key = {
-                    "kty": key["kty"],
-                    "kid": key["kid"],
-                    "use": key["use"],
-                    "n": key["n"],
-                    "e": key["e"]
-                }
-    except KeyError:
-        logger.exception("Unable to verify token!")
+        signing_key = jwks_client.get_signing_key_from_jwt(token).key
+    except (jwt.exceptions.PyJWKClientError, jwt.exceptions.DecodeError):
+        logger.exception("Error getting signing key!")
         raise HTTPException(
-            status_code=401,
-            detail="Unable to verify token!",
-            headers={"WWW-Authenticate": "Bearer"}
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    if rsa_key:
-        try:
-            payload = jwt.decode(
-                token,
-                rsa_key,
-                algorithms=["RS256"],
-                audience=settings.AUTH0_AUDIENCE,
-                issuer=settings.AUTH0_ISSUER
-            )
-        except jwt.ExpiredSignatureError:
-            logger.exception("Token signature expired!")
-            raise HTTPException(
-                status_code=401,
-                detail="Token signature expired!",
-                headers={"WWW-Authenticate": "Bearer"}
-            )
-        except jwt.JWTClaimsError:
-            logger.exception("Incorrect claims, please check the audience and issuer!")
-            raise HTTPException(
-                status_code=401,
-                detail="Incorrect claims, please check the audience and issuer!",
-                headers={"WWW-Authenticate": "Bearer"}
-            )
 
-        logger.error(f"Payload: {payload}")
-        return payload
-  
-    raise HTTPException(
-        status_code=401,
-        detail="Unable to verify token!",
-        headers={"WWW-Authenticate": "Bearer"}
-    )
+    try:
+        payload = jwt.decode(
+            token,
+            signing_key,
+            algorithms=["RS256"],
+            audience=settings.AUTH0_MANAGEMENT_AUDIENCE,
+            issuer=settings.AUTH0_MANAGEMENT_ISSUER,
+        )
+    except (jwt.ExpiredSignatureError, jwt.PyJWTError):
+        logger.exception("Error decoding token!")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return payload

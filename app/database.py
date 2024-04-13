@@ -4,12 +4,12 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from app.config import settings
 
 engine = create_engine(settings.DATABASE_URL, echo=True, future=True)
-Base = declarative_base()
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+base = declarative_base()
+local_session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def get_db():
-    db = SessionLocal()
+    db = local_session()
     try:
         yield db
     finally:

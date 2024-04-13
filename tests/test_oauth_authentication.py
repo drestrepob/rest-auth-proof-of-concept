@@ -2,8 +2,7 @@ from faker import Faker
 from fastapi.testclient import TestClient
 from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED
 
-from app.auth.oauth2.auth0 import retrieve_token
-from app.config import settings
+from app.auth.auth0 import retrieve_token
 from app.main import app
 
 client = TestClient(app)

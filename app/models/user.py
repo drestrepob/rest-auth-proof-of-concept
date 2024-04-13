@@ -1,14 +1,15 @@
-from passlib.context import CryptContext
-from sqlalchemy import Boolean, Column, Integer, String, PrimaryKeyConstraint, UniqueConstraint
-from sqlalchemy.sql import expression as sql
 from typing import List, Self
 
-from app.database import Base
+from passlib.context import CryptContext
+from sqlalchemy import Boolean, Column, Integer, String, PrimaryKeyConstraint
+from sqlalchemy.sql import expression as sql
+
+from app.database import base
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-class User(Base):
+class User(base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -16,7 +17,7 @@ class User(Base):
     username = Column(String(128), unique=True, nullable=False)
     is_active = Column(Boolean, default=True)
 
-    PrimaryKeyConstraint(id, name="pk_user_id")
+    PrimaryKeyConstraint("id", name="pk_user_id")
 
     def __repr__(self):
         return f"<User {self.username}>"

@@ -1,14 +1,15 @@
 from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends
+from starlette import status
 
 from app.auth.bearer import authenticate_bearer, expiration
-from app.config import settings
 
 
 router = APIRouter(
     prefix='/bearer',
     tags=['Bearer'],
-    responses={404: {'description': 'Not found'}},
+    responses={status.HTTP_404_NOT_FOUND: {'description': 'Not found'}},
 )
 
 

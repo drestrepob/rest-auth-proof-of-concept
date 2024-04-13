@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from starlette import status
 
 from app.auth.digest import validate_credentials
 
@@ -7,7 +8,7 @@ router = APIRouter(
     prefix='/digest',
     tags=['Digest'],
     dependencies=[Depends(validate_credentials)],
-    responses={404: {'description': 'Not found'}},
+    responses={status.HTTP_404_NOT_FOUND: {'description': 'Not found'}},
 )
 
 

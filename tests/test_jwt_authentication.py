@@ -6,13 +6,13 @@ from sqlalchemy.pool import StaticPool
 from starlette.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED
 
 from app.config import settings
-from app.database import Base, get_db
+from app.database import base, get_db
 from app.main import app
 
 fake = Faker()
 engine = create_engine(settings.TEST_DATABASE_URL, poolclass=StaticPool)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base.metadata.create_all(bind=engine)
+base.metadata.create_all(bind=engine)
 
 
 def get_test_db():

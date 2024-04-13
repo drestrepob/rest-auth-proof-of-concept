@@ -1,10 +1,11 @@
 import hashlib
 import logging
 
+from typing import Annotated
+
 from fastapi import Security, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPDigest
 from starlette.status import HTTP_401_UNAUTHORIZED
-from typing import Annotated
 
 from app.config import settings
 from app.schemas import HTTPDigestCredentials

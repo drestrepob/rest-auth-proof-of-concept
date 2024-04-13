@@ -1,20 +1,21 @@
 from datetime import timedelta
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from starlette.status import HTTP_401_UNAUTHORIZED
-from typing import Annotated
+from starlette import status
+
 
 from app.auth.jwt import authenticate_user, create_access_token, refresh_token
 from app.config import settings
 from app.database import get_db
 from app.schemas import TokenSchema
 
-
 router = APIRouter(
     prefix='/jwt',
     tags=['JWT'],
-    responses={404: {'description': 'Not found'}},
+    responses={status.HTTP_404_NOT_FOUND: {'description': 'Not found'}},
 )
 
 
@@ -26,7 +27,7 @@ async def login_for_token(
     authenticated_user = authenticate_user(db, form_data.username, form_data.password)
     if not authenticated_user:
         raise HTTPException(
-            status_code=HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Incorrect username or password',
             headers={'WWW-Authenticate': 'Bearer'}
         )

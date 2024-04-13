@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from starlette import status
 
 from app.auth.api_key import get_api_key
 
@@ -7,7 +8,7 @@ router = APIRouter(
     prefix='/api-key',
     tags=['Api Key'],
     dependencies=[Depends(get_api_key)],
-    responses={404: {'description': 'Not found'}},
+    responses={status.HTTP_404_NOT_FOUND: {'description': 'Not found'}},
 )
 
 

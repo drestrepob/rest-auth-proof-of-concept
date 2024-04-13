@@ -1,9 +1,10 @@
 import secrets
 
+from typing import Annotated
+
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.status import HTTP_401_UNAUTHORIZED
-from typing import Annotated
 
 from app.config import settings
 

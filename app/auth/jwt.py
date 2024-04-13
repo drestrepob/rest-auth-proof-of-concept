@@ -1,7 +1,8 @@
 import logging
 
+import jwt
+
 from datetime import datetime, timedelta
-from jose import jwt, JWTError
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -54,7 +55,7 @@ async def get_current_user(db: Session = Depends(get_db), token: str = Depends(o
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-    except JWTError as e:
+    except jwt.PyJWTError:
         logger.exception("Error decoding token!")
         raise credentials_exception
     
@@ -73,7 +74,7 @@ async def refresh_token(token: str = Depends(oauth2_scheme)):
             settings.JWT_SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM],
         )
-    except JWTError as e:
+    except jwt.PyJWTError:
         logger.exception("Error refreshing token!")
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
