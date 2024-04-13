@@ -6,28 +6,62 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
 from app.config import settings
+from app.schemas.auth0 import ClientRequestBody
 
 logger = logging.getLogger(__name__)
+oauth_url = f"https://{settings.AUTH0_DOMAIN}/oauth/token"
+clients_url = f"https://{settings.AUTH0_DOMAIN}/api/v2/clients"
+default_headers = {
+    "Accept": "application/json",
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Cache-Control": "no-cache"
+}
 jwks_url = f"https://{settings.AUTH0_DOMAIN}/.well-known/jwks.json"
 security = OAuth2PasswordBearer(tokenUrl="/auth0/token")
 
 
-def retrieve_token(scope: str):
+async def create_client():
+    payload = ClientRequestBody(name="POC-client", app_type="native").model_dump()
+    logger.error(f"Payload: {payload}")
     headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Cache-Control": "no-cache"
+        **default_headers,
+        "Authorization": f"Bearer {settings.AUTH0_MANAGEMENT_TOKEN}"
     }
+    response = httpx.post(url=clients_url, headers=headers, data=payload)
+    if response.status_code == 201:
+        return response.json()
+    else:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=response.json()
+        )
+
+
+async def get_clients():
+    headers = {
+        **default_headers,
+        "Authorization": f"Bearer {settings.AUTH0_MANAGEMENT_TOKEN}"
+    }
+    response = httpx.get(url=clients_url, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=response.json()
+        )
+
+
+def retrieve_token():
     data = {
         "grant_type": "client_credentials",
         "client_id": settings.AUTH0_CLIENT_ID,
         "client_secret": settings.AUTH0_CLIENT_SECRET,
-        "audience": settings.AUTH0_AUDIENCE
+        "audience": settings.AUTH0_AUDIENCE,
     }
-    logger.error(f"URL {settings.AUTH0_ISSUER}/oauth/token")
-    response = httpx.post(url=f"{settings.AUTH0_ISSUER}/oauth/token", headers=headers, data=data)
+    response = httpx.post(url=oauth_url, headers=default_headers, data=data)
     if response.status_code == 200:
-        logger.error(f"AUTH0 response:")
+        logger.error(f"AUTH0 response: {response.json()}")
         return response.json()
     else:
         raise HTTPException(
@@ -37,7 +71,7 @@ def retrieve_token(scope: str):
         )
 
 
-async def validate_token(token: str = Depends(security)):
+async def validate_token(token: str = Depends(security)) -> dict:
     json_url = httpx.get(jwks_url)
     jwks = json_url.json()
     unverified_header = jwt.get_unverified_header(token)
@@ -67,7 +101,7 @@ async def validate_token(token: str = Depends(security)):
                 rsa_key,
                 algorithms=["RS256"],
                 audience=settings.AUTH0_AUDIENCE,
-                issuer=f"https://{settings.AUTH0_DOMAIN}/"
+                issuer=settings.AUTH0_ISSUER
             )
         except jwt.ExpiredSignatureError:
             logger.exception("Token signature expired!")
@@ -83,8 +117,12 @@ async def validate_token(token: str = Depends(security)):
                 detail="Incorrect claims, please check the audience and issuer!",
                 headers={"WWW-Authenticate": "Bearer"}
             )
-        else:
-            # Logic to validate scope or user data
-            return True
+
+        logger.error(f"Payload: {payload}")
+        return payload
   
-    return False
+    raise HTTPException(
+        status_code=401,
+        detail="Unable to verify token!",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
